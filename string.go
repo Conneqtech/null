@@ -8,7 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 )
 

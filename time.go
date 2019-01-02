@@ -4,7 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 	"time"
 )
@@ -110,7 +110,7 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 }
 
 func (t *Time) SetBSON(raw bson.Raw) error {
-	return bson.Unmarshal(raw.Data,t)
+	return bson.Unmarshal(raw.Data, t)
 }
 
 func (t Time) GetBSON() (interface{}, error) {

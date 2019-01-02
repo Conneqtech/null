@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 	"strconv"
 )
@@ -77,6 +78,18 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	}
 	i.Valid = err == nil
 	return err
+}
+
+
+func (s *Int) SetBSON(raw bson.Raw) error {
+	return s.UnmarshalJSON(raw.Data)
+}
+
+func (s Int) GetBSON() (interface{}, error) {
+	if !s.Valid {
+		return nil,nil
+	}
+	return s.Int64, nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.

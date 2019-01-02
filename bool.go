@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 )
 
@@ -68,7 +68,6 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	b.Valid = err == nil
 	return err
 }
-
 
 func (t *Bool) SetBSON(raw bson.Raw) error {
 	return t.UnmarshalJSON(raw.Data)
