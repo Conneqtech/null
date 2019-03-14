@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 )
 
@@ -79,6 +80,17 @@ func (s String) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return json.Marshal(s.String)
+}
+
+func (s *String) SetBSON(raw bson.Raw) error {
+	return s.UnmarshalJSON(raw.Data)
+}
+
+func (s String) GetBSON() (interface{}, error) {
+	if !s.Valid {
+		return nil,nil
+	}
+	return s.String, nil
 }
 
 // MarshalText implements encoding.TextMarshaler.

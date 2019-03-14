@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
 )
 
@@ -66,6 +67,17 @@ func (b *Bool) UnmarshalJSON(data []byte) error {
 	}
 	b.Valid = err == nil
 	return err
+}
+
+func (t *Bool) SetBSON(raw bson.Raw) error {
+	return t.UnmarshalJSON(raw.Data)
+}
+
+func (t Bool) GetBSON() (interface{}, error) {
+	if !t.Valid {
+		return nil, nil
+	}
+	return t.Bool, nil
 }
 
 // UnmarshalText implements encoding.TextUnmarshaler.

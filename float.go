@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"math"
 	"reflect"
 	"strconv"
@@ -79,6 +80,8 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	return err
 }
 
+
+
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null Float if the input is a blank or not an integer.
 // It will return an error if the input is not an integer, blank, or "null".
@@ -107,6 +110,17 @@ func (f Float) MarshalJSON() ([]byte, error) {
 		}
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
+}
+
+func (t *Float) SetBSON(raw bson.Raw) error {
+	return t.UnmarshalJSON(raw.Data)
+}
+
+func (t Float) GetBSON() (interface{}, error) {
+	if !t.Valid {
+		return nil, nil
+	}
+	return t.Float64, nil
 }
 
 // MarshalText implements encoding.TextMarshaler.

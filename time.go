@@ -3,8 +3,11 @@ package null
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/globalsign/mgo/bson"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -14,6 +17,8 @@ type Time struct {
 	Time  time.Time
 	Valid bool
 }
+
+type JSONTime time.Time
 
 // Scan implements the Scanner interface.
 func (t *Time) Scan(value interface{}) error {
@@ -74,7 +79,17 @@ func (t Time) MarshalJSON() ([]byte, error) {
 	if !t.Valid {
 		return []byte("null"), nil
 	}
-	return t.Time.MarshalJSON()
+	if y := t.Time.Year(); y < 0 || y >= 10000 {
+		// RFC 3339 is clear that years are 4 digits exactly.
+		// See golang.org/issue/4556#c15 for more discussion.
+		return nil, errors.New("Time.MarshalJSON: year outside of range [0,9999]")
+	}
+
+	b := make([]byte, 0, len(time.RFC3339)+2)
+	b = append(b, '"')
+	b = t.Time.AppendFormat(b, time.RFC3339)
+	b = append(b, '"')
+	return b, nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -88,7 +103,19 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 	switch x := v.(type) {
 	case string:
-		err = t.Time.UnmarshalJSON(data)
+		dataString := string(data)
+		// Ignore null, like in the main JSON package.
+		if dataString == "null" {
+			return nil
+		}
+		// Fractional seconds are handled implicitly by Parse.
+		t.Time, err = time.Parse(`"`+time.RFC3339+`"`, dataString)
+		if err != nil {
+			if strings.HasSuffix(dataString, `+0000"`) {
+				dataString = dataString[0:len(dataString)-6] + `Z"`
+				return t.UnmarshalJSON([]byte(dataString))
+			}
+		}
 	case map[string]interface{}:
 		ti, tiOK := x["Time"].(string)
 		valid, validOK := x["Valid"].(bool)
@@ -106,6 +133,17 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	}
 	t.Valid = err == nil
 	return err
+}
+
+func (t *Time) SetBSON(raw bson.Raw) error {
+	return bson.Unmarshal(raw.Data, t)
+}
+
+func (t Time) GetBSON() (interface{}, error) {
+	if !t.Valid {
+		return nil, nil
+	}
+	return t.Time, nil
 }
 
 func (t Time) MarshalText() ([]byte, error) {
