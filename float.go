@@ -60,6 +60,7 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	}
 	switch x := v.(type) {
 	case float64:
+	case float32:
 		f.Float64 = float64(x)
 	case string:
 		str := string(x)
